@@ -1,0 +1,5 @@
+name: "${project.name}"
+version: "${project.version}"
+authors: [ "zml" ]
+main: ninja.leaping.permissionsex.extrabackends.BukkitPlugin
+depend: [ "PermissionsEx" ]
