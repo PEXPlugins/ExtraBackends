@@ -17,6 +17,7 @@
 package ninja.leaping.permissionsex.extrabackends;
 
 import com.google.common.base.Function;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import ninja.leaping.permissionsex.backend.AbstractDataStore;
 import ninja.leaping.permissionsex.backend.DataStore;
@@ -35,17 +36,17 @@ public abstract class ReadOnlyDataStore extends AbstractDataStore {
 
     @Override
     protected ListenableFuture<ImmutableOptionSubjectData> setDataInternal(String type, String identifier, ImmutableOptionSubjectData data) {
-        throw new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!");
+        return Futures.immediateFailedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
     }
 
     @Override
     protected ListenableFuture<RankLadder> setRankLadderInternal(String ladder, RankLadder newLadder) {
-        throw new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!");
+        return Futures.immediateFailedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
     }
 
     @Override
     protected ListenableFuture<ContextInheritance> setContextInheritanceInternal(ContextInheritance contextInheritance) {
-        throw new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!");
+        return Futures.immediateFailedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
     }
 
     @Override
