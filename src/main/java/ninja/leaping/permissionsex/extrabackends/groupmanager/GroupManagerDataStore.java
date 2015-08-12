@@ -44,6 +44,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static ninja.leaping.permissionsex.util.Translations._;
+
 /**
  * Backend implementing GroupManager data storage format
  */
@@ -80,6 +82,9 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
     @Override
     protected void initializeInternal() throws PermissionsLoadingException {
         final File rootFile = new File(groupManagerRoot);
+        if (!rootFile.isDirectory()) {
+            throw new PermissionsLoadingException(_("GroupManager directory %s does not exist", rootFile)); // TODO: Actual translations
+        }
         try {
             config = getLoader(new File(rootFile, "config.yml")).load();
             globalGroups = getLoader(new File(rootFile, "globalgroups.yml")).load();
@@ -131,7 +136,7 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
 
             }
         } else if (type.equals("group")) {
-            if (!globalGroups.getNode(identifier).isVirtual()) {
+            if (!globalGroups.getNode("groups", "g:" + identifier).isVirtual()) {
                 return true;
             }
             for (Map.Entry<String, Map.Entry<ConfigurationNode, ConfigurationNode>> ent : this.worldUserGroups.entrySet()) {
@@ -162,7 +167,16 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
                 public Set<Object> apply(@Nullable Map.Entry<ConfigurationNode, ConfigurationNode> input) {
                     return input.getValue().getNode("groups").getChildrenMap().keySet();
                 }
-            })), globalGroups.getNode("groups").getChildrenMap().keySet()), Functions.toStringFunction()));
+            })), Iterables.transform(globalGroups.getNode("groups").getChildrenMap().keySet(), new Function<Object, Object>() {
+                @Nullable
+                @Override
+                public Object apply(@Nullable Object input) {
+                    if (input instanceof String && ((String) input).startsWith("g:")) {
+                        input = ((String) input).substring(2);
+                    }
+                    return input;
+                }
+            })), Functions.toStringFunction()));
         } else {
             return ImmutableSet.of();
         }

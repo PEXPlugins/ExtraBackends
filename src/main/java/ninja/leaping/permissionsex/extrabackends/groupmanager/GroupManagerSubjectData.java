@@ -101,7 +101,7 @@ public class GroupManagerSubjectData extends ReadOnlySubjectData {
             return ImmutableMap.of();
         }
         try {
-            return specificNode.getValue(TYPE_MAP_STRING_STRING);
+            return specificNode.getNode("info").getValue(TYPE_MAP_STRING_STRING, ImmutableMap.<String, String>of());
         } catch (ObjectMappingException e) {
             return ImmutableMap.of();
         }

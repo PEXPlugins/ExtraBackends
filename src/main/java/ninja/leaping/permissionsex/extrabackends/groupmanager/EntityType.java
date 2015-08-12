@@ -33,7 +33,7 @@ public enum  EntityType {
             if (worldPair == null) {
                 return null;
             }
-            return worldPair.getValue();
+            return worldPair.getKey();
         }
 
         @Override
@@ -63,7 +63,14 @@ public enum  EntityType {
 
         @Override
         public ConfigurationNode getNodeForSubject(ConfigurationNode root, String name) {
-            return root.getNode("groups", name);
+            ConfigurationNode ret = root.getNode("groups", name);
+            if (ret.isVirtual()) {
+                ConfigurationNode global = root.getNode("groups", "g:" + name);
+                if (!global.isVirtual()) {
+                    return global;
+                }
+            }
+            return ret;
         }
     },
     OTHER {

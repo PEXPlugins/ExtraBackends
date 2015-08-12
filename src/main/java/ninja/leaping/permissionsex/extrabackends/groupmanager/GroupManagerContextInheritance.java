@@ -17,9 +17,11 @@
 package ninja.leaping.permissionsex.extrabackends.groupmanager;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.permissionsex.data.ContextInheritance;
+import ninja.leaping.permissionsex.util.Util;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,5 +63,14 @@ public class GroupManagerContextInheritance implements ContextInheritance {
     @Override
     public ContextInheritance setParents(Map.Entry<String, String> context, List<Map.Entry<String, String>> parents) {
         return this;
+    }
+
+    @Override
+    public Map<Map.Entry<String, String>, List<Map.Entry<String, String>>> getAllParents() {
+        final ImmutableMap.Builder<Map.Entry<String, String>, List<Map.Entry<String, String>>> ret = ImmutableMap.builder();
+        for (Map.Entry<String, List<Map.Entry<String, String>>> entry : worlds.entrySet()) {
+            ret.put(Util.subjectFromString(entry.getKey()), entry.getValue());
+        }
+        return ret.build();
     }
 }
