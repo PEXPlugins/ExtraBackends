@@ -16,80 +16,80 @@
  */
 package ninja.leaping.permissionsex.extrabackends;
 
-import ninja.leaping.permissionsex.data.ImmutableOptionSubjectData;
+import ninja.leaping.permissionsex.data.ImmutableSubjectData;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class ReadOnlySubjectData implements ImmutableOptionSubjectData {
+public abstract class ReadOnlySubjectData implements ImmutableSubjectData {
     @Override
-    public ImmutableOptionSubjectData setOption(Set<Map.Entry<String, String>> contexts, String key, String value) {
+    public ImmutableSubjectData setOption(Set<Map.Entry<String, String>> contexts, String key, String value) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData setOptions(Set<Map.Entry<String, String>> contexts, Map<String, String> values) {
+    public ImmutableSubjectData setOptions(Set<Map.Entry<String, String>> contexts, Map<String, String> values) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData clearOptions(Set<Map.Entry<String, String>> contexts) {
+    public ImmutableSubjectData clearOptions(Set<Map.Entry<String, String>> contexts) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData clearOptions() {
+    public ImmutableSubjectData clearOptions() {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData setPermission(Set<Map.Entry<String, String>> contexts, String permission, int value) {
+    public ImmutableSubjectData setPermission(Set<Map.Entry<String, String>> contexts, String permission, int value) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData setPermissions(Set<Map.Entry<String, String>> contexts, Map<String, Integer> values) {
+    public ImmutableSubjectData setPermissions(Set<Map.Entry<String, String>> contexts, Map<String, Integer> values) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData clearPermissions() {
+    public ImmutableSubjectData clearPermissions() {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData clearPermissions(Set<Map.Entry<String, String>> contexts) {
+    public ImmutableSubjectData clearPermissions(Set<Map.Entry<String, String>> contexts) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData addParent(Set<Map.Entry<String, String>> contexts, String type, String identifier) {
+    public ImmutableSubjectData addParent(Set<Map.Entry<String, String>> contexts, String type, String identifier) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData removeParent(Set<Map.Entry<String, String>> contexts, String type, String identifier) {
+    public ImmutableSubjectData removeParent(Set<Map.Entry<String, String>> contexts, String type, String identifier) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData setParents(Set<Map.Entry<String, String>> contexts, List<Map.Entry<String, String>> parents) {
+    public ImmutableSubjectData setParents(Set<Map.Entry<String, String>> contexts, List<Map.Entry<String, String>> parents) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData clearParents() {
+    public ImmutableSubjectData clearParents() {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData clearParents(Set<Map.Entry<String, String>> contexts) {
+    public ImmutableSubjectData clearParents(Set<Map.Entry<String, String>> contexts) {
         return this;
     }
 
     @Override
-    public ImmutableOptionSubjectData setDefaultValue(Set<Map.Entry<String, String>> contexts, int defaultValue) {
+    public ImmutableSubjectData setDefaultValue(Set<Map.Entry<String, String>> contexts, int defaultValue) {
         return this;
     }
 }

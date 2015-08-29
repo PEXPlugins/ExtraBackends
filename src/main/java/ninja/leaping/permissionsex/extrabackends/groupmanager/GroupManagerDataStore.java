@@ -28,7 +28,7 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 import ninja.leaping.permissionsex.data.ContextInheritance;
-import ninja.leaping.permissionsex.data.ImmutableOptionSubjectData;
+import ninja.leaping.permissionsex.data.ImmutableSubjectData;
 import ninja.leaping.permissionsex.exception.PermissionsLoadingException;
 import ninja.leaping.permissionsex.extrabackends.ReadOnlyDataStore;
 import ninja.leaping.permissionsex.rank.FixedRankLadder;
@@ -108,7 +108,7 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
     }
 
     @Override
-    protected ImmutableOptionSubjectData getDataInternal(String type, String identifier) throws PermissionsLoadingException {
+    protected ImmutableSubjectData getDataInternal(String type, String identifier) throws PermissionsLoadingException {
         return new GroupManagerSubjectData(identifier, this, EntityType.forTypeString(type));
     }
 
@@ -188,12 +188,12 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
     }
 
     @Override
-    public Iterable<Map.Entry<Map.Entry<String, String>, ImmutableOptionSubjectData>> getAll() {
+    public Iterable<Map.Entry<Map.Entry<String, String>, ImmutableSubjectData>> getAll() {
         return Iterables.transform(Iterables.concat(Iterables.transform(getAllIdentifiers("user"), nameToSubjectForType("user")),
-                Iterables.transform(getAllIdentifiers("group"), nameToSubjectForType("group"))), new Function<Map.Entry<String, String>, Map.Entry<Map.Entry<String, String>, ImmutableOptionSubjectData>>() {
+                Iterables.transform(getAllIdentifiers("group"), nameToSubjectForType("group"))), new Function<Map.Entry<String, String>, Map.Entry<Map.Entry<String, String>, ImmutableSubjectData>>() {
             @Nullable
             @Override
-            public Map.Entry<Map.Entry<String, String>, ImmutableOptionSubjectData> apply(@Nullable Map.Entry<String, String> input) {
+            public Map.Entry<Map.Entry<String, String>, ImmutableSubjectData> apply(@Nullable Map.Entry<String, String> input) {
                 return Maps.immutableEntry(input, getData(input.getKey(), input.getValue(), null));
             }
         });

@@ -22,7 +22,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import ninja.leaping.permissionsex.backend.AbstractDataStore;
 import ninja.leaping.permissionsex.backend.DataStore;
 import ninja.leaping.permissionsex.data.ContextInheritance;
-import ninja.leaping.permissionsex.data.ImmutableOptionSubjectData;
+import ninja.leaping.permissionsex.data.ImmutableSubjectData;
 import ninja.leaping.permissionsex.rank.RankLadder;
 
 /**
@@ -35,7 +35,7 @@ public abstract class ReadOnlyDataStore extends AbstractDataStore {
     }
 
     @Override
-    protected ListenableFuture<ImmutableOptionSubjectData> setDataInternal(String type, String identifier, ImmutableOptionSubjectData data) {
+    protected ListenableFuture<ImmutableSubjectData> setDataInternal(String type, String identifier, ImmutableSubjectData data) {
         return Futures.immediateFailedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
     }
 
