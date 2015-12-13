@@ -16,8 +16,6 @@
  */
 package ninja.leaping.permissionsex.extrabackends.groupmanager;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -35,16 +33,19 @@ import ninja.leaping.permissionsex.rank.FixedRankLadder;
 import ninja.leaping.permissionsex.rank.RankLadder;
 import org.yaml.snakeyaml.DumperOptions;
 
-import javax.annotation.Nullable;
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import static ninja.leaping.permissionsex.util.Translations._;
+import static ninja.leaping.permissionsex.PermissionsEx.SUBJECTS_GROUP;
+import static ninja.leaping.permissionsex.PermissionsEx.SUBJECTS_USER;
+import static ninja.leaping.permissionsex.util.Translations.t;
 
 /**
  * Backend implementing GroupManager data storage format
@@ -64,10 +65,10 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
         super(FACTORY);
     }
 
-    private ConfigurationLoader<ConfigurationNode> getLoader(File file) {
+    private ConfigurationLoader<ConfigurationNode> getLoader(Path file) {
         return YAMLConfigurationLoader.builder()
                 .setFlowStyle(DumperOptions.FlowStyle.BLOCK)
-                .setFile(file)
+                .setPath(file)
                 .build();
     }
 
@@ -81,25 +82,26 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
 
     @Override
     protected void initializeInternal() throws PermissionsLoadingException {
-        final File rootFile = new File(groupManagerRoot);
-        if (!rootFile.isDirectory()) {
-            throw new PermissionsLoadingException(_("GroupManager directory %s does not exist", rootFile)); // TODO: Actual translations
+        final Path rootFile = Paths.get(groupManagerRoot);
+        if (!Files.isDirectory(rootFile)) {
+            throw new PermissionsLoadingException(t("GroupManager directory %s does not exist", rootFile)); // TODO: Actual translations
         }
         try {
-            config = getLoader(new File(rootFile, "config.yml")).load();
-            globalGroups = getLoader(new File(rootFile, "globalgroups.yml")).load();
+            config = getLoader(rootFile.resolve("config.yml")).load();
+            globalGroups = getLoader(rootFile.resolve("globalgroups.yml")).load();
             worldUserGroups = new HashMap<>();
-            for (File world : new File(rootFile, "worlds").listFiles(new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    return file.isDirectory();
-                }
-            }))  {
-                worldUserGroups.put(world.getName(), Maps.immutableEntry(
-                        getLoader(new File(world, "users.yml")).load(),
-                        getLoader(new File(world, "groups.yml")).load()
-                ));
-            }
+            Files.list(rootFile.resolve("worlds"))
+                    .filter(Files::isDirectory)
+                    .forEach(world -> {
+                        try {
+                            worldUserGroups.put(world.getFileName().toString(), Maps.immutableEntry(
+                                    getLoader(world.resolve("users.yml")).load(),
+                                    getLoader(world.resolve("groups.yml")).load()));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e); // TODO
+                        }
+
+                    });
             contextInheritance = new GroupManagerContextInheritance(config.getNode("settings", "mirrors"));
         } catch (IOException e) {
             throw new PermissionsLoadingException(e);
@@ -128,14 +130,14 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
 
     @Override
     public boolean isRegistered(String type, String identifier) {
-        if (type.equals("user")) {
+        if (type.equals(SUBJECTS_USER)) {
             for (Map.Entry<String, Map.Entry<ConfigurationNode, ConfigurationNode>> ent : this.worldUserGroups.entrySet()) {
                 if (!ent.getValue().getKey().getNode("users", identifier).isVirtual()) {
                     return true;
                 }
 
             }
-        } else if (type.equals("group")) {
+        } else if (type.equals(SUBJECTS_GROUP)) {
             if (!globalGroups.getNode("groups", "g:" + identifier).isVirtual()) {
                 return true;
             }
@@ -152,31 +154,19 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
 
     @Override
     public Iterable<String> getAllIdentifiers(String type) {
-        if (type.equals("user")) {
-            return Sets.newHashSet(Iterables.transform(Iterables.concat(Iterables.transform(this.worldUserGroups.values(), new Function<Map.Entry<ConfigurationNode, ConfigurationNode>, Set<Object>>() {
-                @Nullable
-                @Override
-                public Set<Object> apply(@Nullable Map.Entry<ConfigurationNode, ConfigurationNode> input) {
-                    return input.getKey().getNode("users").getChildrenMap().keySet();
+        if (type.equals(SUBJECTS_USER)) {
+            return this.worldUserGroups.values().stream()
+                    .map(input -> input.getKey().getNode("users").getChildrenMap().keySet())
+                    .flatMap(Set::stream)
+                    .map(Object::toString)
+                    .collect(Collectors.toSet());
+        } else if (type.equals(SUBJECTS_GROUP)) {
+            return Sets.newHashSet(Iterables.transform(Iterables.concat(Iterables.concat(Iterables.transform(this.worldUserGroups.values(), input -> input.getValue().getNode("groups").getChildrenMap().keySet())), Iterables.transform(globalGroups.getNode("groups").getChildrenMap().keySet(), input -> {
+                if (input instanceof String && ((String) input).startsWith("g:")) {
+                    input = ((String) input).substring(2);
                 }
-            })), Functions.toStringFunction()));
-        } else if (type.equals("group")) {
-            return Sets.newHashSet(Iterables.transform(Iterables.concat(Iterables.concat(Iterables.transform(this.worldUserGroups.values(), new Function<Map.Entry<ConfigurationNode, ConfigurationNode>, Set<Object>>() {
-                @Nullable
-                @Override
-                public Set<Object> apply(@Nullable Map.Entry<ConfigurationNode, ConfigurationNode> input) {
-                    return input.getValue().getNode("groups").getChildrenMap().keySet();
-                }
-            })), Iterables.transform(globalGroups.getNode("groups").getChildrenMap().keySet(), new Function<Object, Object>() {
-                @Nullable
-                @Override
-                public Object apply(@Nullable Object input) {
-                    if (input instanceof String && ((String) input).startsWith("g:")) {
-                        input = ((String) input).substring(2);
-                    }
-                    return input;
-                }
-            })), Functions.toStringFunction()));
+                return input;
+            })), Object::toString));
         } else {
             return ImmutableSet.of();
         }
@@ -184,29 +174,13 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
 
     @Override
     public Set<String> getRegisteredTypes() {
-        return ImmutableSet.of("user", "group");
+        return ImmutableSet.of(SUBJECTS_USER, SUBJECTS_GROUP);
     }
 
     @Override
     public Iterable<Map.Entry<Map.Entry<String, String>, ImmutableSubjectData>> getAll() {
-        return Iterables.transform(Iterables.concat(Iterables.transform(getAllIdentifiers("user"), nameToSubjectForType("user")),
-                Iterables.transform(getAllIdentifiers("group"), nameToSubjectForType("group"))), new Function<Map.Entry<String, String>, Map.Entry<Map.Entry<String, String>, ImmutableSubjectData>>() {
-            @Nullable
-            @Override
-            public Map.Entry<Map.Entry<String, String>, ImmutableSubjectData> apply(@Nullable Map.Entry<String, String> input) {
-                return Maps.immutableEntry(input, getData(input.getKey(), input.getValue(), null));
-            }
-        });
-    }
-
-    private static Function<String, Map.Entry<String, String>> nameToSubjectForType(final String type) {
-        return new Function<String, Map.Entry<String, String>>() {
-            @Nullable
-            @Override
-            public Map.Entry<String, String> apply(String input) {
-                return Maps.immutableEntry(type, input);
-            }
-        };
+        return Iterables.transform(Iterables.concat(Iterables.transform(getAllIdentifiers(SUBJECTS_USER), name -> Maps.immutableEntry(SUBJECTS_USER, name)),
+                Iterables.transform(getAllIdentifiers(SUBJECTS_GROUP), name -> Maps.immutableEntry(SUBJECTS_GROUP, name))), input -> Maps.immutableEntry(input, getData(input.getKey(), input.getValue(), null)));
     }
 
     @Override

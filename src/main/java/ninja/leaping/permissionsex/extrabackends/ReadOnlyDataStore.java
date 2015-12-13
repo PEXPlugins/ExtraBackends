@@ -16,14 +16,15 @@
  */
 package ninja.leaping.permissionsex.extrabackends;
 
-import com.google.common.base.Function;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import ninja.leaping.permissionsex.backend.AbstractDataStore;
 import ninja.leaping.permissionsex.backend.DataStore;
 import ninja.leaping.permissionsex.data.ContextInheritance;
 import ninja.leaping.permissionsex.data.ImmutableSubjectData;
 import ninja.leaping.permissionsex.rank.RankLadder;
+import ninja.leaping.permissionsex.util.Util;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 /**
  * A specialization of AbstractDataStore that handles backends for a global data store
@@ -35,18 +36,18 @@ public abstract class ReadOnlyDataStore extends AbstractDataStore {
     }
 
     @Override
-    protected ListenableFuture<ImmutableSubjectData> setDataInternal(String type, String identifier, ImmutableSubjectData data) {
-        return Futures.immediateFailedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
+    protected CompletableFuture<ImmutableSubjectData> setDataInternal(String type, String identifier, ImmutableSubjectData data) {
+        return Util.failedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
     }
 
     @Override
-    protected ListenableFuture<RankLadder> setRankLadderInternal(String ladder, RankLadder newLadder) {
-        return Futures.immediateFailedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
+    protected CompletableFuture<RankLadder> setRankLadderInternal(String ladder, RankLadder newLadder) {
+        return Util.failedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
     }
 
     @Override
-    protected ListenableFuture<ContextInheritance> setContextInheritanceInternal(ContextInheritance contextInheritance) {
-        return Futures.immediateFailedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
+    protected CompletableFuture<ContextInheritance> setContextInheritanceInternal(ContextInheritance contextInheritance) {
+        return Util.failedFuture(new UnsupportedOperationException("The " + getClass().getSimpleName() + " backend is-read-only!"));
     }
 
     @Override

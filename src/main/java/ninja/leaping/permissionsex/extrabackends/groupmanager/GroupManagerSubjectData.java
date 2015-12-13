@@ -16,9 +16,6 @@
  */
 package ninja.leaping.permissionsex.extrabackends.groupmanager;
 
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -27,10 +24,10 @@ import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import ninja.leaping.permissionsex.PermissionsEx;
 import ninja.leaping.permissionsex.backend.ConversionUtils;
 import ninja.leaping.permissionsex.extrabackends.ReadOnlySubjectData;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,18 +77,7 @@ public class GroupManagerSubjectData extends ReadOnlySubjectData {
 
     @Override
     public Map<Set<Map.Entry<String, String>>, Map<String, String>> getAllOptions() {
-        return Maps.filterValues(Maps.asMap(getActiveContexts(), new Function<Set<Map.Entry<String, String>>, Map<String, String>>() {
-            @Nullable
-            @Override
-            public Map<String, String> apply(Set<Map.Entry<String, String>> input) {
-                return getOptions(input);
-            }
-        }), new Predicate<Map<String, String>>() {
-            @Override
-            public boolean apply(@Nullable Map<String, String> input) {
-                return input != null && !input.isEmpty();
-            }
-        });
+        return Maps.filterValues(Maps.asMap(getActiveContexts(), this::getOptions), input -> input != null && !input.isEmpty());
     }
 
     @Override
@@ -109,18 +95,7 @@ public class GroupManagerSubjectData extends ReadOnlySubjectData {
 
     @Override
     public Map<Set<Map.Entry<String, String>>, Map<String, Integer>> getAllPermissions() {
-        return Maps.filterValues(Maps.asMap(getActiveContexts(), new Function<Set<Map.Entry<String, String>>, Map<String, Integer>>() {
-            @Nullable
-            @Override
-            public Map<String, Integer> apply(Set<Map.Entry<String, String>> input) {
-                return getPermissions(input);
-            }
-        }), new Predicate<Map<String, Integer>>() {
-            @Override
-            public boolean apply(@Nullable Map<String, Integer> input) {
-                return input != null && !input.isEmpty();
-            }
-        });
+        return Maps.filterValues(Maps.asMap(getActiveContexts(), this::getPermissions), input -> input != null && !input.isEmpty());
     }
 
     @Override
@@ -152,18 +127,7 @@ public class GroupManagerSubjectData extends ReadOnlySubjectData {
 
     @Override
     public Map<Set<Map.Entry<String, String>>, List<Map.Entry<String, String>>> getAllParents() {
-        return Maps.filterValues(Maps.asMap(getActiveContexts(), new Function<Set<Map.Entry<String, String>>, List<Map.Entry<String, String>>>() {
-            @Nullable
-            @Override
-            public List<Map.Entry<String, String>> apply(Set<Map.Entry<String, String>> input) {
-                return getParents(input);
-            }
-        }), new Predicate<List<Map.Entry<String, String>>>() {
-            @Override
-            public boolean apply(@Nullable List<Map.Entry<String, String>> input) {
-                return input != null && !input.isEmpty();
-            }
-        });
+        return Maps.filterValues(Maps.asMap(getActiveContexts(), this::getParents), input -> input != null && !input.isEmpty());
     }
 
     @Override
@@ -174,15 +138,11 @@ public class GroupManagerSubjectData extends ReadOnlySubjectData {
         }
 
         try {
-            return Lists.transform(specificNode.getNode(this.type.getInheritanceKey()).getList(TypeToken.of(String.class)), new Function<String, Map.Entry<String, String>>() {
-                @Nullable
-                @Override
-                public Map.Entry<String, String> apply(@Nullable String input) {
+            return Lists.transform(specificNode.getNode(this.type.getInheritanceKey()).getList(TypeToken.of(String.class)), input -> {
                     if (input.startsWith("g:")) {
                         input = input.substring(2);
                     }
-                    return Maps.immutableEntry("group", input);
-                }
+                    return Maps.immutableEntry(PermissionsEx.SUBJECTS_GROUP, input);
             });
         } catch (ObjectMappingException e) {
             return ImmutableList.of();
@@ -195,7 +155,7 @@ public class GroupManagerSubjectData extends ReadOnlySubjectData {
         if (specificNode == null) {
             return 0;
         }
-        List<Object> values = specificNode.getNode("permissions").getList(Functions.identity());
+        List<Object> values = specificNode.getNode("permissions").getList(input -> input);
         if (values.contains("*")) {
             return 1;
         } else if (values.contains("-*")) {
@@ -208,8 +168,8 @@ public class GroupManagerSubjectData extends ReadOnlySubjectData {
     @Override
     public Set<Set<Map.Entry<String, String>>> getActiveContexts() {
         ImmutableSet.Builder<Set<Map.Entry<String, String>>> activeContextsBuilder = ImmutableSet.builder();
-        if (getNodeForContexts(ImmutableSet.<Map.Entry<String, String>>of()) != null) {
-            activeContextsBuilder.add(ImmutableSet.<Map.Entry<String, String>>of());
+        if (getNodeForContexts(PermissionsEx.GLOBAL_CONTEXT) != null) {
+            activeContextsBuilder.add(PermissionsEx.GLOBAL_CONTEXT);
         }
 
         for (String world : this.dataStore.getKnownWorlds()) {
@@ -224,17 +184,6 @@ public class GroupManagerSubjectData extends ReadOnlySubjectData {
 
     @Override
     public Map<Set<Map.Entry<String, String>>, Integer> getAllDefaultValues() {
-        return Maps.filterValues(Maps.asMap(getActiveContexts(), new Function<Set<Map.Entry<String, String>>, Integer>() {
-            @Nullable
-            @Override
-            public Integer apply(Set<Map.Entry<String, String>> input) {
-                return getDefaultValue(input);
-            }
-        }), new Predicate<Integer>() {
-            @Override
-            public boolean apply(@Nullable Integer input) {
-                return input != null && input != 0;
-            }
-        });
+        return Maps.filterValues(Maps.asMap(getActiveContexts(), this::getDefaultValue), input -> input != null && input != 0);
     }
 }
