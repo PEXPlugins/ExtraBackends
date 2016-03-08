@@ -16,9 +16,12 @@
  */
 package ninja.leaping.permissionsex.extrabackends;
 
+import org.spongepowered.api.plugin.Dependency;
 import org.spongepowered.api.plugin.Plugin;
 
-@Plugin(id = PomData.ARTIFACT_ID, name = PomData.NAME, version = PomData.VERSION, dependencies = "required-after:PermissionsEx")
+@Plugin(id = PomData.ARTIFACT_ID, name = PomData.NAME, version = PomData.VERSION, dependencies = {
+        @Dependency(id = "ninja.leaping.permissionsex")
+})
 public class SpongePlugin {
     SpongePlugin() {
         Registry.register();
