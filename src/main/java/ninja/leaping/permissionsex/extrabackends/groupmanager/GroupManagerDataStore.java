@@ -153,7 +153,7 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
     }
 
     @Override
-    public Iterable<String> getAllIdentifiers(String type) {
+    public Set<String> getAllIdentifiers(String type) {
         if (type.equals(SUBJECTS_USER)) {
             return this.worldUserGroups.values().stream()
                     .map(input -> input.getKey().getNode("users").getChildrenMap().keySet())
