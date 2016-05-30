@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.Futures;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.Setting;
@@ -41,6 +42,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static ninja.leaping.permissionsex.PermissionsEx.SUBJECTS_GROUP;
@@ -110,18 +112,18 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
     }
 
     @Override
-    protected ImmutableSubjectData getDataInternal(String type, String identifier) throws PermissionsLoadingException {
-        return new GroupManagerSubjectData(identifier, this, EntityType.forTypeString(type));
+    protected CompletableFuture<ImmutableSubjectData> getDataInternal(String type, String identifier) {
+        return CompletableFuture.completedFuture(new GroupManagerSubjectData(identifier, this, EntityType.forTypeString(type)));
     }
 
     @Override
-    protected RankLadder getRankLadderInternal(String ladder) {
-        return new FixedRankLadder(ladder, ImmutableList.<Map.Entry<String, String>>of()); // GM does not have a concept of rank ladders
+    protected CompletableFuture<RankLadder> getRankLadderInternal(String ladder) {
+        return CompletableFuture.completedFuture(new FixedRankLadder(ladder, ImmutableList.<Map.Entry<String, String>>of())); // GM does not have a concept of rank ladders
     }
 
     @Override
-    protected ContextInheritance getContextInheritanceInternal() {
-        return contextInheritance;
+    protected CompletableFuture<ContextInheritance> getContextInheritanceInternal() {
+        return CompletableFuture.completedFuture(contextInheritance);
     }
 
     @Override
@@ -129,27 +131,27 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
     }
 
     @Override
-    public boolean isRegistered(String type, String identifier) {
+    public CompletableFuture<Boolean> isRegistered(String type, String identifier) {
         if (type.equals(SUBJECTS_USER)) {
             for (Map.Entry<String, Map.Entry<ConfigurationNode, ConfigurationNode>> ent : this.worldUserGroups.entrySet()) {
                 if (!ent.getValue().getKey().getNode("users", identifier).isVirtual()) {
-                    return true;
+                    return CompletableFuture.completedFuture(true);
                 }
 
             }
         } else if (type.equals(SUBJECTS_GROUP)) {
             if (!globalGroups.getNode("groups", "g:" + identifier).isVirtual()) {
-                return true;
+                return CompletableFuture.completedFuture(true);
             }
             for (Map.Entry<String, Map.Entry<ConfigurationNode, ConfigurationNode>> ent : this.worldUserGroups.entrySet()) {
                 if (!ent.getValue().getValue().getNode("groups", identifier).isVirtual()) {
-                    return true;
+                    return CompletableFuture.completedFuture(true);
                 }
 
             }
 
         }
-        return false;
+        return CompletableFuture.completedFuture(false);
     }
 
     @Override
@@ -180,7 +182,7 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
     @Override
     public Iterable<Map.Entry<Map.Entry<String, String>, ImmutableSubjectData>> getAll() {
         return Iterables.transform(Iterables.concat(Iterables.transform(getAllIdentifiers(SUBJECTS_USER), name -> Maps.immutableEntry(SUBJECTS_USER, name)),
-                Iterables.transform(getAllIdentifiers(SUBJECTS_GROUP), name -> Maps.immutableEntry(SUBJECTS_GROUP, name))), input -> Maps.immutableEntry(input, getData(input.getKey(), input.getValue(), null)));
+                Iterables.transform(getAllIdentifiers(SUBJECTS_GROUP), name -> Maps.immutableEntry(SUBJECTS_GROUP, name))), input -> Maps.immutableEntry(input, Futures.getUnchecked(getData(input.getKey(), input.getValue(), null))));
     }
 
     @Override
@@ -189,8 +191,8 @@ public class GroupManagerDataStore extends ReadOnlyDataStore {
     }
 
     @Override
-    public boolean hasRankLadder(String ladder) {
-        return false;
+    public CompletableFuture<Boolean> hasRankLadder(String ladder) {
+        return CompletableFuture.completedFuture(false);
     }
 
     public Collection<String> getKnownWorlds() {
